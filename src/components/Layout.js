@@ -6,7 +6,7 @@ var Layout = React.createClass({
   render: function () {
     return (
       <body >
-        <Nav />
+        <Nav/>
         <main className="app">{this.props.children}</main>
       </body>
     );
