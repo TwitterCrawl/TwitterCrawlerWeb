@@ -60,6 +60,7 @@ app.get('/render', function (req, res) {
 });
 
 app.post('/query', function(req, res) {
+  console.log("SERVER", req.body);
   res.json(req.body);
 });
 
