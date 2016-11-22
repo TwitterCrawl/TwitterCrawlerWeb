@@ -55,14 +55,12 @@ app.get('/render', function (req, res) {
   res.sendFile(__dirname + "/src/client_components/searchEngine.compiled.js", function(err) {
     if(err)
       console.log(err);
-    else
-      console.log("YES");
   });
 
 });
 
 app.post('/query', function(req, res) {
-
+  res.json(req.body);
 });
 
 app.listen(port, function(err) {
