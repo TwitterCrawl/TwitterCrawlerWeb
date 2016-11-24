@@ -1,0 +1,3 @@
+[submodule "CS172-Tweet-Collector"]
+	path = CS172-Tweet-Collector
+	url = https://github.com/TwitterCrawl/CS172-Tweet-Collector
