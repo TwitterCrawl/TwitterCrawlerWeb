@@ -28,6 +28,7 @@ const Nav = React.createClass({
     }
   },
   render: function () {
+    if (!this.state.searching) var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true });else var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true, disabled: true });
     return React.createElement(
       "nav",
       null,
@@ -122,6 +123,7 @@ const TopDocs = React.createClass({
       }
       console.log(Results);
       var docNodes = Results.map(function (result, index) {
+        var hashtags = result.hashtags.toString();
         return React.createElement(
           "li",
           { key: index },
@@ -146,19 +148,25 @@ const TopDocs = React.createClass({
               "p",
               null,
               "Name: ",
-              result.name
+              result.name,
+              React.createElement("br", null),
+              "Message: ",
+              result.message,
+              React.createElement("br", null),
+              "Location : ",
+              result.location,
+              React.createElement("br", null),
+              "hashtags : hashtags",
+              React.createElement("br", null),
+              "url_titles : N/A "
             )
           )
         );
       });
       var markup = React.createElement(
-        "div",
-        null,
-        React.createElement(
-          "ul",
-          { className: "collapsible", "data-collapsible": "accordion" },
-          docNodes
-        )
+        "ul",
+        { className: "collapsible", "data-collapsible": "accordion" },
+        docNodes
       );
     }
     return React.createElement(
@@ -174,12 +182,13 @@ const SEContainer = React.createClass({
 
   getInitialState: function () {
     return {
-      results: {}
+      results: {},
+      searching: false
     };
   },
   parseResults: function (results) {
     var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
-    this.setState({ results: docs });
+    this.setState({ results: docs }, { state: true });
   },
   render: function () {
     return React.createElement(

@@ -28,6 +28,10 @@ const Nav = React.createClass({
     }
   },
   render : function () {
+    if(!this.state.searching)
+      var search = <input id="search" type="search" onKeyUp={this.submitQuery} required/>
+    else
+      var search = <input id="search" type="search" onKeyUp={this.submitQuery} required disabled/>
     return (
       <nav>
         <div className="nav-wrapper">
@@ -53,7 +57,7 @@ const TopDocs = React.createClass({
       var markup = (
         <ul className="collapsible" data-collapsible="accordion">
         <li>
-         <div className="collapsible-header center"><i className="material-icons">filter_drama</i><h1>Search for a tweet!</h1></div>
+         <div className="collapsible-header center"><i className="material-icons">search</i><h1>Search for a tweet!</h1></div>
         </li>
         </ul>
       )
@@ -62,7 +66,7 @@ const TopDocs = React.createClass({
       var markup = (
         <ul className="collapsible" data-collapsible="accordion">
         <li>
-         <div className="collapsible-header center"><i className="material-icons">filter_drama</i><h1>No results found!</h1></div>
+         <div className="collapsible-header center"><i className="material-icons">error</i><h1>No results found!</h1></div>
         </li>
         </ul>
       )
@@ -76,21 +80,24 @@ const TopDocs = React.createClass({
       }
       console.log(Results);
       var docNodes = Results.map(function(result, index) {
+        var hashtags = result.hashtags.toString();
         return (
           <li key={index}>
-           <div className="collapsible-header"><i className="material-icons">filter_drama</i>Score: {result.score}<br /> Date: {result.timestamp}</div>
+           <div className="collapsible-header"><i className="material-icons">info</i>Score: {result.score}<br /> Date: {result.timestamp}</div>
            <div className="collapsible-body">
-            <p>Name: {result.name}</p>
-           </div>
+            <p>Name: {result.name}<br />
+               Message: {result.message}<br />
+               Location : {result.location}<br />
+               hashtags : hashtags<br />
+               url_titles : N/A </p>
+              </div>
           </li>
         )
       });
       var markup = (
-        <div>
           <ul className="collapsible" data-collapsible="accordion">
           {docNodes}
           </ul>
-        </div>
       )
     }
     return (
@@ -104,12 +111,13 @@ const TopDocs = React.createClass({
 const SEContainer = React.createClass({
   getInitialState : function () {
     return {
-      results : {}
+      results : {},
+      searching : false
     }
   },
   parseResults : function (results) {
     var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
-    this.setState({results : docs})
+    this.setState({results : docs}, {state : true})
   },
   render : function () {
     return (
