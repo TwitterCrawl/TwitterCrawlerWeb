@@ -62,33 +62,104 @@ const TopDocs = React.createClass({
     }
   },*/
   render: function () {
-    console.log("WE passed", this.props.results);
     if (jQuery.isEmptyObject(this.props.results)) {
       var markup = React.createElement(
-        "h1",
-        null,
-        "YOU HAVE NOT QUERIED!"
+        "ul",
+        { className: "collapsible", "data-collapsible": "accordion" },
+        React.createElement(
+          "li",
+          null,
+          React.createElement(
+            "div",
+            { className: "collapsible-header center" },
+            React.createElement(
+              "i",
+              { className: "material-icons" },
+              "filter_drama"
+            ),
+            React.createElement(
+              "h1",
+              null,
+              "Search for a tweet!"
+            )
+          )
+        )
       );
     } else if (this.props.results[0] == "") {
       var markup = React.createElement(
-        "h1",
-        null,
-        "NO RESULTS!"
+        "ul",
+        { className: "collapsible", "data-collapsible": "accordion" },
+        React.createElement(
+          "li",
+          null,
+          React.createElement(
+            "div",
+            { className: "collapsible-header center" },
+            React.createElement(
+              "i",
+              { className: "material-icons" },
+              "filter_drama"
+            ),
+            React.createElement(
+              "h1",
+              null,
+              "No results found!"
+            )
+          )
+        )
       );
     } else {
       var Results = [];
-      for (var i = 0; i < this.props.results.length; i++) {
-        ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length));
+      for (var i = 0; i < this.props.results.length - 1; i++) {
+        console.log('--------------------RESULT:' + this.props.results.length + '/' + (i + 1) + '--------------------');
+        Results.push(ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length)));
+        console.log('~~~~~~~~~~~~~~~~~~~~~END~~~~~~~~~~~~~~~~~~~~');
       }
+      console.log(Results);
+      var docNodes = Results.map(function (result, index) {
+        return React.createElement(
+          "li",
+          { key: index },
+          React.createElement(
+            "div",
+            { className: "collapsible-header center" },
+            React.createElement(
+              "i",
+              { className: "material-icons" },
+              "filter_drama"
+            ),
+            React.createElement(
+              "h1",
+              null,
+              result.score,
+              " - ",
+              result.timestamp
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "collapsible-body" },
+            React.createElement(
+              "p",
+              null,
+              "Lorem ipsum dolor sit amet."
+            )
+          )
+        );
+      });
       var markup = React.createElement(
-        "h1",
+        "div",
         null,
-        "QUERIED!"
+        React.createElement(
+          "ul",
+          { className: "collapsible", "data-collapsible": "accordion" },
+          docNodes
+        )
       );
     }
     return React.createElement(
       "div",
-      null,
+      { className: "container" },
       markup
     );
   }
@@ -121,7 +192,7 @@ var escape = function (match) {
   return match;
 };
 
-function bashify(word) {
+function clean(word) {
   word = word.replace(/"/g, escape);
   return word.slice(0, word.length - 1);
 }
@@ -130,25 +201,41 @@ function ParseFullResults(document) {
   var docArray = document.split(", {");
   var jsonResult = {};
   for (var i = 0; i < docArray.length; i++) {
+    console.log(i);
     switch (i) {
       case 0:
         jsonResult.score = jQuery.parseJSON(docArray[i]).score;
         break;
       case 1:
         jsonResult.name = jQuery.parseJSON('{' + docArray[i]).name;
-        console.log(jsonResult.name);
         break;
       case 2:
+        var message = docArray[i].split(': "')[1];
+        message = clean(message.substring(0, message.length - 2));
+        jsonResult.message = jQuery.parseJSON('{"message" : "' + message + '"}').message;
         break;
       case 3:
+        if (docArray[i].indexOf('[]') != -1) jsonResult.hashtags = jQuery.parseJSON('{"hashtags" : "null"}').hashtags;else {
+          var hashtags = docArray[i].split(': [')[1];
+          hashtags = hashtags.substring(0, hashtags.length - 2).split(', ');
+          var jsonHashtags = '{"hashtags" : [';
+          for (var j = 0; j < hashtags.length; j++) {
+            if (j < hashtags.length - 1) jsonHashtags += '"' + hashtags[j] + '", ';else jsonHashtags += '"' + hashtags[j] + '"]}';
+          }
+          jsonResult.hashtags = jQuery.parseJSON(jsonHashtags).hashtags;
+        }
         break;
       case 4:
+        jsonResult.location = jQuery.parseJSON('{' + docArray[i]).location;
         break;
       case 5:
         break;
       case 6:
+        jsonResult.timestamp = jQuery.parseJSON('{' + docArray[i]).timestamp;
         break;
     }
   }
+  console.log(jsonResult);
+  return jsonResult;
 }
 ReactDOM.render(React.createElement(SEContainer, null), document.getElementById('markup'));
