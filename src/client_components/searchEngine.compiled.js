@@ -69,7 +69,17 @@ const TopDocs = React.createClass({
         null,
         "YOU HAVE NOT QUERIED!"
       );
+    } else if (this.props.results[0] == "") {
+      var markup = React.createElement(
+        "h1",
+        null,
+        "NO RESULTS!"
+      );
     } else {
+      var Results = [];
+      for (var i = 0; i < this.props.results.length; i++) {
+        ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length));
+      }
       var markup = React.createElement(
         "h1",
         null,
@@ -106,12 +116,39 @@ const SEContainer = React.createClass({
   }
 });
 
-ReactDOM.render(React.createElement(SEContainer, null), document.getElementById('markup') /*, function() {
-                                                                                          $('#search').on('keyup', function(event) {
-                                                                                          if (event.keyCode == 13) {
-                                                                                          console.log("ENTERED");
-                                                                                          var val = $(this).val()
-                                                                                          $(this).val('');
-                                                                                          }
-                                                                                          });
-                                                                                          }*/);
+var escape = function (match) {
+  match = "\\" + match;
+  return match;
+};
+
+function bashify(word) {
+  word = word.replace(/"/g, escape);
+  return word.slice(0, word.length - 1);
+}
+
+function ParseFullResults(document) {
+  var docArray = document.split(", {");
+  var jsonResult = {};
+  for (var i = 0; i < docArray.length; i++) {
+    switch (i) {
+      case 0:
+        jsonResult.score = jQuery.parseJSON(docArray[i]).score;
+        break;
+      case 1:
+        jsonResult.name = jQuery.parseJSON('{' + docArray[i]).name;
+        console.log(jsonResult.name);
+        break;
+      case 2:
+        break;
+      case 3:
+        break;
+      case 4:
+        break;
+      case 5:
+        break;
+      case 6:
+        break;
+    }
+  }
+}
+ReactDOM.render(React.createElement(SEContainer, null), document.getElementById('markup'));
