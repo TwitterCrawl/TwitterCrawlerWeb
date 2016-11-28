@@ -1,6 +1,11 @@
 const Nav = React.createClass({
   displayName: "Nav",
 
+  getInitialState: function () {
+    return {
+      searching: false
+    };
+  },
   submitQuery: function (event) {
     if (event.keyCode != 13) {} else {
       query = {
@@ -122,19 +127,17 @@ const TopDocs = React.createClass({
           { key: index },
           React.createElement(
             "div",
-            { className: "collapsible-header center" },
+            { className: "collapsible-header" },
             React.createElement(
               "i",
               { className: "material-icons" },
               "filter_drama"
             ),
-            React.createElement(
-              "h1",
-              null,
-              result.score,
-              " - ",
-              result.timestamp
-            )
+            "Score: ",
+            result.score,
+            React.createElement("br", null),
+            " Date: ",
+            result.timestamp
           ),
           React.createElement(
             "div",
@@ -142,7 +145,8 @@ const TopDocs = React.createClass({
             React.createElement(
               "p",
               null,
-              "Lorem ipsum dolor sit amet."
+              "Name: ",
+              result.name
             )
           )
         );

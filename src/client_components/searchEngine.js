@@ -1,7 +1,7 @@
 const Nav = React.createClass({
   getInitialState : function() {
     return {
-      searching : false;
+      searching : false
     }
   },
   submitQuery : function (event) {
@@ -32,7 +32,7 @@ const Nav = React.createClass({
       <nav>
         <div className="nav-wrapper">
           <div className="input-field">
-            <input id="search" type="search" onKeyUp={this.submitQuery} required disabled/>
+            <input id="search" type="search" onKeyUp={this.submitQuery} required/>
             <label htmlFor="search"><i className="material-icons">search</i></label>
             <i className="material-icons">close</i>
           </div>
@@ -78,9 +78,9 @@ const TopDocs = React.createClass({
       var docNodes = Results.map(function(result, index) {
         return (
           <li key={index}>
-           <div className="collapsible-header center"><i className="material-icons">filter_drama</i>Score: {result.score}<br /> Date: {result.timestamp}</div>
+           <div className="collapsible-header"><i className="material-icons">filter_drama</i>Score: {result.score}<br /> Date: {result.timestamp}</div>
            <div className="collapsible-body">
-            <p>Name: {result.name} <br />Message: {result.message}<br />Location: {result.location}</p>
+            <p>Name: {result.name}</p>
            </div>
           </li>
         )
