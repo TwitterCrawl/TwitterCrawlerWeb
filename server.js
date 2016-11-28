@@ -27,9 +27,6 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './src/views'));
 
 app.get('/', function (req, res) {
-  /*exec('./script.sh', function(error, stdout, stderr) {
-    console.log(stdout);
-  });*/
   match( {routes : routes({}), location: req.url},
     function(err, redirectLocation, renderProps) {
       if(err) {
@@ -60,8 +57,14 @@ app.get('/render', function (req, res) {
 });
 
 app.post('/query', function(req, res) {
-  console.log("SERVER", req.body);
-  res.json(req.body);
+  /*console.log("SERVER", req.body);
+  res.json(req.body);*/
+  SendResults(req.body.query).then(
+    function(results) {
+      //var docs = results.substring(results.indexOf("~STRT~") + 6, results.indexOf("~END~")).split("\n");
+      res.json(results);
+    }
+  )
 });
 
 app.listen(port, function(err) {
@@ -70,3 +73,12 @@ app.listen(port, function(err) {
   }
   console.info('Server running on http://localhost:' + port)
 });
+
+function SendResults(query) {
+  return new Promise(function(resolve, reject) {
+    exec('./script.sh \"'  + query+ '\"', function(error, stdout, stderr) {
+      console.log(stdout);
+      resolve(stdout);
+    });
+  })
+}

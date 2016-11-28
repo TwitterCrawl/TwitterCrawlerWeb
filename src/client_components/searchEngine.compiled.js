@@ -7,6 +7,7 @@ const Nav = React.createClass({
         query: $("#search").val()
       };
       $("#search").val(''); // clear the search query
+      console.log("YOUR QUERY", query);
       $.ajax({
         url: '/query',
         dataType: 'json',
@@ -55,14 +56,31 @@ const Nav = React.createClass({
 const TopDocs = React.createClass({
   displayName: "TopDocs",
 
-  getInitialState: function () {
+  /*getInitialState : function () {
     return {
-      results: {}
-    };
-  },
+      results : {}
+    }
+  },*/
   render: function () {
     console.log("WE passed", this.props.results);
-    return React.createElement("h1", null);
+    if (jQuery.isEmptyObject(this.props.results)) {
+      var markup = React.createElement(
+        "h1",
+        null,
+        "YOU HAVE NOT QUERIED!"
+      );
+    } else {
+      var markup = React.createElement(
+        "h1",
+        null,
+        "QUERIED!"
+      );
+    }
+    return React.createElement(
+      "div",
+      null,
+      markup
+    );
   }
 });
 
@@ -75,7 +93,8 @@ const SEContainer = React.createClass({
     };
   },
   parseResults: function (results) {
-    this.setState({ results: results });
+    var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
+    this.setState({ results: docs });
   },
   render: function () {
     return React.createElement(
@@ -92,22 +111,7 @@ ReactDOM.render(React.createElement(SEContainer, null), document.getElementById(
                                                                                           if (event.keyCode == 13) {
                                                                                           console.log("ENTERED");
                                                                                           var val = $(this).val()
-                                                                                          $(this).val('') // clear the search query
+                                                                                          $(this).val('');
                                                                                           }
                                                                                           });
                                                                                           }*/);
-/*
-function queryIndex(val) {
-  console.log("Got it", val)
-  ReactDOM.render(<TopDocs query={val} />, document.getElementById('markup'), function() {
-    $('#search').on('keyup', function(event) {
-      if (event.keyCode == 13) {
-        console.log("ENTERED");
-        var val = $(this).val()
-        $(this).val('') // clear the search query
-        queryIndex(val)
-      }
-    });
-  })
-}
-*/

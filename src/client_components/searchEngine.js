@@ -7,6 +7,7 @@ const Nav = React.createClass({
         query : $("#search").val()
       }
       $("#search").val('') // clear the search query
+      console.log("YOUR QUERY", query)
       $.ajax({
          url: '/query',
          dataType: 'json',
@@ -37,15 +38,32 @@ const Nav = React.createClass({
 });
 
 const TopDocs = React.createClass({
-  getInitialState : function () {
+  /*getInitialState : function () {
     return {
       results : {}
     }
-  },
+  },*/
   render : function () {
     console.log("WE passed", this.props.results);
+    if(jQuery.isEmptyObject(this.props.results)) {
+      var markup = (
+        <h1>YOU HAVE NOT QUERIED!</h1>
+
+    else if(this.props.results[0] == "")  {
+      var markup = (
+        <h1>NO RESULTS!</h1>
+      )
+    }
+    else {
+      var Results = ParseFullResults(this.props.results);
+      var markup = (
+        <h1>QUERIED!</h1>
+      )
+    }
     return (
-      <h1></h1>
+      <div>
+        {markup}
+      </div>
     );
   }
 });
@@ -57,7 +75,8 @@ const SEContainer = React.createClass({
     }
   },
   parseResults : function (results) {
-    this.setState({results : results})
+    var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
+    this.setState({results : docs})
   },
   render : function () {
     return (
@@ -74,22 +93,7 @@ ReactDOM.render(<SEContainer />, document.getElementById('markup')/*, function()
     if (event.keyCode == 13) {
       console.log("ENTERED");
       var val = $(this).val()
-      $(this).val('') // clear the search query
+      $(this).val('');
     }
   });
 }*/);
-/*
-function queryIndex(val) {
-  console.log("Got it", val)
-  ReactDOM.render(<TopDocs query={val} />, document.getElementById('markup'), function() {
-    $('#search').on('keyup', function(event) {
-      if (event.keyCode == 13) {
-        console.log("ENTERED");
-        var val = $(this).val()
-        $(this).val('') // clear the search query
-        queryIndex(val)
-      }
-    });
-  })
-}
-*/
