@@ -11,7 +11,6 @@ const Nav = React.createClass({
       query = {
         query : $("#search").val()
       }
-      $("#search").val('') // clear the search query
       console.log("YOUR QUERY", query);
       $.ajax({
          url: '/query',
@@ -20,7 +19,8 @@ const Nav = React.createClass({
          data: query,
          success: function(data) {
            //this.setState({searching : false});
-           this.props.passResults(data);
+           $("#search").val('') // clear the search query
+           this.props.passResults(data, query.query);
          }.bind(this),
          error: function(xhr, status, err) {
            console.error(this.props.url, status, err.toString());
@@ -109,6 +109,9 @@ const TopDocs = React.createClass({
       });
       var markup = (
           <ul className="collapsible" data-collapsible="accordion">
+          <li>
+           <div className="collapsible-header center">Search results for "{this.props.query}"</div>
+          </li>
           {docNodes}
           </ul>
       )
@@ -125,12 +128,13 @@ const SEContainer = React.createClass({
   getInitialState : function () {
     return {
       results : {},
-      searching : false
+      searching : false,
+      query : "null"
     }
   },
-  parseResults : function (results) {
+  parseResults : function (results, query) {
     var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
-    this.setState({results : docs, searching : false});
+    this.setState({results : docs, searching : false, query : query});
   },
   loader : function() {
     if(this.state.searching == true)
@@ -141,9 +145,9 @@ const SEContainer = React.createClass({
   render : function () {
     return (
       <div>
-      <Nav setLoad={this.loader} passResults={this.parseResults} searching={this.state.searching}/>
+      <Nav setLoad={this.loader} passResults={this.parseResults} searching={this.state.searching} />
       <br />
-      <TopDocs results={this.state.results} searching={this.state.searching}/>
+      <TopDocs query={this.state.query} results={this.state.results} searching={this.state.searching}/>
       </div>
     );
   }
@@ -200,7 +204,8 @@ function ParseFullResults(document) {
         jsonResult.location = "not shown";
       break;
       case 5:
-      if(docArray.indexOf(": null") != -1) {
+      console.log(docArray[i])
+      if(docArray[i].indexOf(': null') != -1) {
         console.log('a');
         jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "none"}').url_titles
       }
