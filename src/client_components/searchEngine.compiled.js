@@ -19,7 +19,7 @@ const Nav = React.createClass({
         type: 'POST',
         data: query,
         success: function (data) {
-          this.setState({ searching: false });
+          //this.setState({searching : false});
           this.props.passResults(data);
         }.bind(this),
         error: function (xhr, status, err) {
@@ -27,22 +27,18 @@ const Nav = React.createClass({
         }.bind(this)
       });
       console.log("REACHE END");
-      this.setState({ searching: true });
       this.props.setLoad();
     }
   },
   render: function () {
-    if (this.state.searching == false) var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true });else var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true, disabled: true });
-    return React.createElement(
-      "nav",
-      null,
-      React.createElement(
+    if (this.props.searching == false) {
+      var search = React.createElement(
         "div",
         { className: "nav-wrapper" },
         React.createElement(
           "div",
           { className: "input-field" },
-          search,
+          React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true }),
           React.createElement(
             "label",
             { htmlFor: "search" },
@@ -58,7 +54,42 @@ const Nav = React.createClass({
             "close"
           )
         )
-      )
+      );
+    } else {
+      var search = React.createElement(
+        "div",
+        { className: "nav-wrapper" },
+        React.createElement(
+          "div",
+          { className: "input-field" },
+          React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true, disabled: true }),
+          React.createElement(
+            "label",
+            { htmlFor: "search" },
+            React.createElement(
+              "i",
+              { className: "material-icons" },
+              "search"
+            )
+          ),
+          React.createElement(
+            "i",
+            { className: "material-icons" },
+            "close"
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "progress" },
+          React.createElement("div", { className: "indeterminate" })
+        )
+      );
+    }
+
+    return React.createElement(
+      "nav",
+      null,
+      search
     );
   }
 });
@@ -66,46 +97,8 @@ const Nav = React.createClass({
 const TopDocs = React.createClass({
   displayName: "TopDocs",
 
-  /*getInitialState : function () {
-    return {
-      results : {}
-    }
-  },*/
   render: function () {
-    if (this.props.searching == true) {
-      var markup = React.createElement(
-        "div",
-        { className: "center" },
-        React.createElement(
-          "h1",
-          null,
-          "Searching..."
-        ),
-        React.createElement(
-          "div",
-          { className: "preloader-wrapper big active" },
-          React.createElement(
-            "div",
-            { className: "spinner-layer spinner-blue-only" },
-            React.createElement(
-              "div",
-              { className: "circle-clipper left" },
-              React.createElement("div", { className: "circle" })
-            ),
-            React.createElement(
-              "div",
-              { className: "gap-patch" },
-              React.createElement("div", { className: "circle" })
-            ),
-            React.createElement(
-              "div",
-              { className: "circle-clipper right" },
-              React.createElement("div", { className: "circle" })
-            )
-          )
-        )
-      );
-    } else if (jQuery.isEmptyObject(this.props.results)) {
+    if (jQuery.isEmptyObject(this.props.results)) {
       var markup = React.createElement(
         "ul",
         { className: "collapsible", "data-collapsible": "accordion" },
@@ -189,7 +182,15 @@ const TopDocs = React.createClass({
               React.createElement("br", null),
               "Message: ",
               result.message,
-              React.createElement("br", null)
+              React.createElement("br", null),
+              "Location: ",
+              result.location,
+              React.createElement("br", null),
+              "hashtags: ",
+              hashtags,
+              React.createElement("br", null),
+              "url-titles: ",
+              result.url_titles
             )
           )
         );
@@ -222,13 +223,14 @@ const SEContainer = React.createClass({
     this.setState({ results: docs, searching: false });
   },
   loader: function () {
-    this.setState({ searching: !this.state.searching });
+    if (this.state.searching == true) this.setState({ searching: false });else this.setState({ searching: true });
   },
   render: function () {
     return React.createElement(
       "div",
       null,
       React.createElement(Nav, { setLoad: this.loader, passResults: this.parseResults, searching: this.state.searching }),
+      React.createElement("br", null),
       React.createElement(TopDocs, { results: this.state.results, searching: this.state.searching })
     );
   }
@@ -264,7 +266,7 @@ function ParseFullResults(document) {
         jsonResult.message = jQuery.parseJSON('{"message" : "' + message + '"}').message;
         break;
       case 3:
-        if (docArray[i].indexOf('[]') != -1) jsonResult.hashtags = jQuery.parseJSON('{"hashtags" : "null"}').hashtags;else {
+        if (docArray[i].indexOf('[]') != -1) jsonResult.hashtags = jQuery.parseJSON('{"hashtags" : "none"}').hashtags;else {
           var hashtags = docArray[i].split(': [')[1];
           hashtags = hashtags.substring(0, hashtags.length - 2).split(', ');
           var jsonHashtags = '{"hashtags" : [';
@@ -276,8 +278,18 @@ function ParseFullResults(document) {
         break;
       case 4:
         jsonResult.location = jQuery.parseJSON('{' + docArray[i]).location;
+        if (jsonResult.location == "") jsonResult.location = "not shown";
         break;
       case 5:
+        console.log(docArray[i]);
+        if (docArray.indexOf(": null") != -1) {
+          jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "none"}').url_titles;
+        } else if (docArray[i].indexOf(': [') != -1) {} else {
+          var url_title = docArray[i].split('" : ')[1];
+          url_title = '"' + clean(url_title.substring(0, url_title.length - 1)) + '"';
+          jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "' + url_titles + '"}').url_titles;
+          console.log("HELO", jsonResult.url_titles);
+        }
         break;
       case 6:
         jsonResult.timestamp = jQuery.parseJSON('{' + docArray[i]).timestamp;

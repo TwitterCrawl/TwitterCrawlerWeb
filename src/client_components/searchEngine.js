@@ -19,7 +19,7 @@ const Nav = React.createClass({
          type: 'POST',
          data: query,
          success: function(data) {
-           this.setState({searching : false});
+           //this.setState({searching : false});
            this.props.passResults(data);
          }.bind(this),
          error: function(xhr, status, err) {
@@ -27,24 +27,37 @@ const Nav = React.createClass({
          }.bind(this)
       });
       console.log("REACHE END");
-      this.setState({searching : true});
       this.props.setLoad();
     }
   },
   render : function () {
-    if(this.state.searching == false)
-      var search = <input id="search" type="search" onKeyUp={this.submitQuery} required/>
-    else
-      var search = <input id="search" type="search" onKeyUp={this.submitQuery} required disabled/>
+    if(this.props.searching == false) {
+      var search = (
+          <div className="nav-wrapper">
+            <div className="input-field">
+              <input id="search" type="search" onKeyUp={this.submitQuery} required/>
+              <label htmlFor="search"><i className="material-icons">search</i></label>
+              <i className="material-icons">close</i>
+            </div>
+          </div>
+      );
+    }
+    else {
+      var search = (
+          <div className="nav-wrapper">
+            <div className="input-field">
+              <input id="search" type="search" onKeyUp={this.submitQuery} required disabled/>
+              <label htmlFor="search"><i className="material-icons">search</i></label>
+              <i className="material-icons">close</i>
+            </div>
+            <div className="progress"><div className="indeterminate"></div></div>
+          </div>
+      );
+    }
+
     return (
       <nav>
-        <div className="nav-wrapper">
-          <div className="input-field">
-            {search}
-            <label htmlFor="search"><i className="material-icons">search</i></label>
-            <i className="material-icons">close</i>
-          </div>
-        </div>
+        {search}
       </nav>
     );
   }
@@ -52,25 +65,7 @@ const Nav = React.createClass({
 
 const TopDocs = React.createClass({
   render : function () {
-    if(this.props.searching == true) {
-      var markup = (
-        <div className="center">
-          <h1>Searching...</h1>
-          <div className="preloader-wrapper big active">
-            <div className="spinner-layer spinner-blue-only">
-              <div className="circle-clipper left">
-                <div className="circle"></div>
-              </div><div className="gap-patch">
-                <div className="circle"></div>
-              </div><div className="circle-clipper right">
-                <div className="circle"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-    else if(jQuery.isEmptyObject(this.props.results)) {
+    if(jQuery.isEmptyObject(this.props.results)) {
       var markup = (
         <ul className="collapsible" data-collapsible="accordion">
         <li>
@@ -104,6 +99,9 @@ const TopDocs = React.createClass({
            <div className="collapsible-body">
             <p>Name: {result.name}<br />
                Message: {result.message}<br />
+               Location: {result.location}<br />
+               hashtags: {hashtags}<br />
+               url-titles: {result.url_titles}
             </p>
               </div>
           </li>
@@ -135,12 +133,16 @@ const SEContainer = React.createClass({
     this.setState({results : docs, searching : false});
   },
   loader : function() {
-    this.setState({searching : !(this.state.searching)})
+    if(this.state.searching == true)
+      this.setState({searching : false})
+    else
+      this.setState({searching : true})
   },
   render : function () {
     return (
       <div>
       <Nav setLoad={this.loader} passResults={this.parseResults} searching={this.state.searching}/>
+      <br />
       <TopDocs results={this.state.results} searching={this.state.searching}/>
       </div>
     );
@@ -178,7 +180,7 @@ function ParseFullResults(document) {
       break;
       case 3:
       if(docArray[i].indexOf('[]') != -1)
-        jsonResult.hashtags = jQuery.parseJSON('{"hashtags" : "null"}').hashtags;
+        jsonResult.hashtags = jQuery.parseJSON('{"hashtags" : "none"}').hashtags;
       else {
         var hashtags = docArray[i].split(': [')[1];
         hashtags = hashtags.substring(0, hashtags.length - 2).split(', ');
@@ -194,8 +196,25 @@ function ParseFullResults(document) {
       break;
       case 4:
       jsonResult.location = jQuery.parseJSON('{' + docArray[i]).location
+      if(jsonResult.location  == "")
+        jsonResult.location = "not shown";
       break;
       case 5:
+      console.log(docArray[i])
+      if(docArray.indexOf(": null") != -1) {
+        console.log('a');
+        jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "none"}').url_titles
+      }
+      else if(docArray[i].indexOf(': [') != -1) {
+        console.log('b');
+      }
+      else {
+        console.log('c');
+        var url_title = docArray[i].split('" : ')[1];
+        url_title = '"' + clean(url_title.substring(0, url_title.length - 1)) + '"'
+        jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "' + url_titles + '"}').url_titles
+        console.log("HELO",jsonResult.url_titles);
+      }
       break;
       case 6:
       jsonResult.timestamp = jQuery.parseJSON('{' + docArray[i]).timestamp
