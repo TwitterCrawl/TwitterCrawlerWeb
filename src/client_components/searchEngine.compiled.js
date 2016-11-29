@@ -19,16 +19,20 @@ const Nav = React.createClass({
         type: 'POST',
         data: query,
         success: function (data) {
+          this.setState({ searching: false });
           this.props.passResults(data);
         }.bind(this),
         error: function (xhr, status, err) {
           console.error(this.props.url, status, err.toString());
         }.bind(this)
       });
+      console.log("REACHE END");
+      this.setState({ searching: true });
+      this.props.setLoad();
     }
   },
   render: function () {
-    if (!this.state.searching) var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true });else var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true, disabled: true });
+    if (this.state.searching == false) var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true });else var search = React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true, disabled: true });
     return React.createElement(
       "nav",
       null,
@@ -38,7 +42,7 @@ const Nav = React.createClass({
         React.createElement(
           "div",
           { className: "input-field" },
-          React.createElement("input", { id: "search", type: "search", onKeyUp: this.submitQuery, required: true }),
+          search,
           React.createElement(
             "label",
             { htmlFor: "search" },
@@ -68,7 +72,40 @@ const TopDocs = React.createClass({
     }
   },*/
   render: function () {
-    if (jQuery.isEmptyObject(this.props.results)) {
+    if (this.props.searching == true) {
+      var markup = React.createElement(
+        "div",
+        { className: "center" },
+        React.createElement(
+          "h1",
+          null,
+          "Searching..."
+        ),
+        React.createElement(
+          "div",
+          { className: "preloader-wrapper big active" },
+          React.createElement(
+            "div",
+            { className: "spinner-layer spinner-blue-only" },
+            React.createElement(
+              "div",
+              { className: "circle-clipper left" },
+              React.createElement("div", { className: "circle" })
+            ),
+            React.createElement(
+              "div",
+              { className: "gap-patch" },
+              React.createElement("div", { className: "circle" })
+            ),
+            React.createElement(
+              "div",
+              { className: "circle-clipper right" },
+              React.createElement("div", { className: "circle" })
+            )
+          )
+        )
+      );
+    } else if (jQuery.isEmptyObject(this.props.results)) {
       var markup = React.createElement(
         "ul",
         { className: "collapsible", "data-collapsible": "accordion" },
@@ -81,7 +118,7 @@ const TopDocs = React.createClass({
             React.createElement(
               "i",
               { className: "material-icons" },
-              "filter_drama"
+              "search"
             ),
             React.createElement(
               "h1",
@@ -104,7 +141,7 @@ const TopDocs = React.createClass({
             React.createElement(
               "i",
               { className: "material-icons" },
-              "filter_drama"
+              "error"
             ),
             React.createElement(
               "h1",
@@ -118,7 +155,7 @@ const TopDocs = React.createClass({
       var Results = [];
       for (var i = 0; i < this.props.results.length - 1; i++) {
         console.log('--------------------RESULT:' + this.props.results.length + '/' + (i + 1) + '--------------------');
-        Results.push(ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length)));
+        Results.push(ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length).replace(/\n/g, " ")));
         console.log('~~~~~~~~~~~~~~~~~~~~~END~~~~~~~~~~~~~~~~~~~~');
       }
       console.log(Results);
@@ -133,7 +170,7 @@ const TopDocs = React.createClass({
             React.createElement(
               "i",
               { className: "material-icons" },
-              "filter_drama"
+              "info"
             ),
             "Score: ",
             result.score,
@@ -152,13 +189,7 @@ const TopDocs = React.createClass({
               React.createElement("br", null),
               "Message: ",
               result.message,
-              React.createElement("br", null),
-              "Location : ",
-              result.location,
-              React.createElement("br", null),
-              "hashtags : hashtags",
-              React.createElement("br", null),
-              "url_titles : N/A "
+              React.createElement("br", null)
             )
           )
         );
@@ -188,14 +219,17 @@ const SEContainer = React.createClass({
   },
   parseResults: function (results) {
     var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
-    this.setState({ results: docs }, { state: true });
+    this.setState({ results: docs, searching: false });
+  },
+  loader: function () {
+    this.setState({ searching: !this.state.searching });
   },
   render: function () {
     return React.createElement(
       "div",
       null,
-      React.createElement(Nav, { passResults: this.parseResults }),
-      React.createElement(TopDocs, { results: this.state.results })
+      React.createElement(Nav, { setLoad: this.loader, passResults: this.parseResults, searching: this.state.searching }),
+      React.createElement(TopDocs, { results: this.state.results, searching: this.state.searching })
     );
   }
 });
@@ -207,7 +241,7 @@ var escape = function (match) {
 
 function clean(word) {
   word = word.replace(/"/g, escape);
-  return word.slice(0, word.length - 1);
+  return word.slice(0, word.length);
 }
 
 function ParseFullResults(document) {
@@ -224,7 +258,9 @@ function ParseFullResults(document) {
         break;
       case 2:
         var message = docArray[i].split(': "')[1];
+        console.log("a", message);
         message = clean(message.substring(0, message.length - 2));
+        console.log("b", message);
         jsonResult.message = jQuery.parseJSON('{"message" : "' + message + '"}').message;
         break;
       case 3:

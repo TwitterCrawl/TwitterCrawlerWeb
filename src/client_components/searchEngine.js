@@ -12,23 +12,27 @@ const Nav = React.createClass({
         query : $("#search").val()
       }
       $("#search").val('') // clear the search query
-      console.log("YOUR QUERY", query)
+      console.log("YOUR QUERY", query);
       $.ajax({
          url: '/query',
          dataType: 'json',
          type: 'POST',
          data: query,
          success: function(data) {
+           this.setState({searching : false});
            this.props.passResults(data);
          }.bind(this),
          error: function(xhr, status, err) {
            console.error(this.props.url, status, err.toString());
          }.bind(this)
       });
+      console.log("REACHE END");
+      this.setState({searching : true});
+      this.props.setLoad();
     }
   },
   render : function () {
-    if(!this.state.searching)
+    if(this.state.searching == false)
       var search = <input id="search" type="search" onKeyUp={this.submitQuery} required/>
     else
       var search = <input id="search" type="search" onKeyUp={this.submitQuery} required disabled/>
@@ -36,7 +40,7 @@ const Nav = React.createClass({
       <nav>
         <div className="nav-wrapper">
           <div className="input-field">
-            <input id="search" type="search" onKeyUp={this.submitQuery} required/>
+            {search}
             <label htmlFor="search"><i className="material-icons">search</i></label>
             <i className="material-icons">close</i>
           </div>
@@ -47,13 +51,26 @@ const Nav = React.createClass({
 });
 
 const TopDocs = React.createClass({
-  /*getInitialState : function () {
-    return {
-      results : {}
-    }
-  },*/
   render : function () {
-    if(jQuery.isEmptyObject(this.props.results)) {
+    if(this.props.searching == true) {
+      var markup = (
+        <div className="center">
+          <h1>Searching...</h1>
+          <div className="preloader-wrapper big active">
+            <div className="spinner-layer spinner-blue-only">
+              <div className="circle-clipper left">
+                <div className="circle"></div>
+              </div><div className="gap-patch">
+                <div className="circle"></div>
+              </div><div className="circle-clipper right">
+                <div className="circle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    else if(jQuery.isEmptyObject(this.props.results)) {
       var markup = (
         <ul className="collapsible" data-collapsible="accordion">
         <li>
@@ -75,7 +92,7 @@ const TopDocs = React.createClass({
       var Results = []
       for(var i = 0; i < this.props.results.length - 1; i++) {
         console.log('--------------------RESULT:' + this.props.results.length + '/' + (i + 1) + '--------------------');
-        Results.push(ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length)));
+        Results.push(ParseFullResults(this.props.results[i].substring(1, this.props.results[i].length).replace(/\n/g, " ")));
         console.log('~~~~~~~~~~~~~~~~~~~~~END~~~~~~~~~~~~~~~~~~~~');
       }
       console.log(Results);
@@ -87,9 +104,7 @@ const TopDocs = React.createClass({
            <div className="collapsible-body">
             <p>Name: {result.name}<br />
                Message: {result.message}<br />
-               Location : {result.location}<br />
-               hashtags : hashtags<br />
-               url_titles : N/A </p>
+            </p>
               </div>
           </li>
         )
@@ -117,13 +132,16 @@ const SEContainer = React.createClass({
   },
   parseResults : function (results) {
     var docs = results.substring(results.indexOf("~STRT~") + 7, results.indexOf("~END~")).split("}\n");
-    this.setState({results : docs}, {state : true})
+    this.setState({results : docs, searching : false});
+  },
+  loader : function() {
+    this.setState({searching : !(this.state.searching)})
   },
   render : function () {
     return (
       <div>
-      <Nav passResults={this.parseResults}/>
-      <TopDocs results={this.state.results}/>
+      <Nav setLoad={this.loader} passResults={this.parseResults} searching={this.state.searching}/>
+      <TopDocs results={this.state.results} searching={this.state.searching}/>
       </div>
     );
   }
@@ -136,7 +154,7 @@ var escape = function(match) {
 
 function clean(word) {
   word = word.replace(/"/g, escape);
-  return word.slice(0, word.length - 1);
+  return word.slice(0, word.length);
 }
 
 function ParseFullResults(document) {
@@ -153,7 +171,9 @@ function ParseFullResults(document) {
       break;
       case 2:
       var message = docArray[i].split(': "')[1];
+      console.log("a", message);
       message = clean(message.substring(0, message.length - 2));
+      console.log("b", message);
       jsonResult.message = jQuery.parseJSON('{"message" : "' + message + '"}').message
       break;
       case 3:
