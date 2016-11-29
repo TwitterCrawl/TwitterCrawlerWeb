@@ -200,7 +200,6 @@ function ParseFullResults(document) {
         jsonResult.location = "not shown";
       break;
       case 5:
-      console.log(docArray[i])
       if(docArray.indexOf(": null") != -1) {
         console.log('a');
         jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "none"}').url_titles
@@ -211,9 +210,10 @@ function ParseFullResults(document) {
       else {
         console.log('c');
         var url_title = docArray[i].split('" : ')[1];
-        url_title = '"' + clean(url_title.substring(0, url_title.length - 1)) + '"'
-        jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : "' + url_titles + '"}').url_titles
-        console.log("HELO",jsonResult.url_titles);
+        url_title = '"' + clean(url_title.substring(0, url_title.length - 1)) + '"';
+        console.log(url_title)
+        jsonResult.url_titles = jQuery.parseJSON('{"url_titles" : ' + url_title + '}').url_titles
+        console.log('{"url_titles" : ' + url_title + '}');
       }
       break;
       case 6:
